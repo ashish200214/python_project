@@ -1,29 +1,24 @@
-# Use official lightweight Python image
+# Use official Python image
 FROM python:3.12-slim
 
-# Set working directory inside container
+# Set working directory
 WORKDIR /app
 
-# Prevent Python from writing pyc files & enable logs
+# Environment settings
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies (optional but safe)
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first (better caching)
+# Copy requirements first
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Expose Flask/Gunicorn port
+# Expose port 5000
 EXPOSE 5000
 
-# Run app using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+# Run Flask app using python (NO gunicorn)
+CMD ["python3", "app.py"]
