@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build & Run Docker Container on Worker') {
+            steps {
+                sshagent(credentials: ['myworker']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@52.91.90.46 "
+                        set -e
+                        echo 'Connected to worker'
+
+                        cd /home/ubuntu
+
+                        # Clean old code
+                        rm -rf python_project
+                        git clone https://github.com/ashish200214/python_project
+                        cd python_project
+
+                        # Stop & remove old container if exists
+                        docker stop flask_app || true
+                        docker rm flask_app || true
+
+                        # Remove old image (optional)
+                        docker rmi python-flask-app || true
+
+                        # Build Docker image
+                        docker build -t python-flask-app .
+
+                        # Run container on same IP:5000
+                        docker run -d \
+                          -p 5000:5000 \
+                          --name flask_app \
+                          python-flask-app
+
+                        echo 'Docker container started successfully'
+                    "
+                    '''
+                }
+            }
+        }
+
+        stage('Running') {
+            steps {
+                echo 'Application running at: http://52.91.90.46:5000'
+            }
+        }
+    }
+}
